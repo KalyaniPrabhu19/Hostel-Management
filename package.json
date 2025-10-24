@@ -1,19 +1,22 @@
 {
   "name": "dbms",
   "version": "1.0.0",
-  "description": "",
+  "type": "module",
   "main": "app.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node app.js"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
     "bcrypt": "^6.0.0",
     "body-parser": "^2.2.0",
+    "cors": "^2.8.5",
     "ejs": "^3.1.10",
     "express": "^5.1.0",
     "mysql": "^2.18.1",
-    "router": "^2.2.0"
+    "router": "^2.2.0",
+    "static": "^2.0.0",
+    "url": "^0.11.4"
   }
 }

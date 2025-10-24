@@ -1,0 +1,93 @@
+app.post("/login", (req, res) => {
+  const { id, password } = req.body;
+
+  if (!id || !password)
+    return res.status(400).json({ message: "All fields required" });
+
+  const sql = "SELECT * FROM users WHERE id = ?";
+  connection.query(sql, [id], async (err, results) => {
+    if (err) {
+      console.error(err);
+      return res.status(500).json({ message: "Database error" });
+    }
+
+    if (results.length === 0)
+      return res.status(401).json({ message: "Invalid user ID or password" });
+
+    const user = results[0];
+    const match = await bcrypt.compare(password, user.password);
+
+    if (!match)
+      return res.status(401).json({ message: "Invalid user ID or password" });
+
+    // login successful
+    res.json({
+      message: "Login successful",
+      role: user.role,
+      id: user.id,
+    });
+  });
+});
+
+
+// Serve dashboards
+app.get('/student', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public/student.html'));
+});
+
+app.get('/admin', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public/admin.html'));
+});
+
+app.get("/api/student/:roll_no", (req, res) => {
+  const roll_no = req.params.roll_no;
+  db.query("SELECT * FROM student WHERE roll_no = ?", [roll_no], (err, results) => {
+    if (err) return res.status(500).json({ message: "DB error", error: err });
+    if (results.length === 0) return res.status(404).json({ message: "No student found" });
+    res.json(results[0]);
+  });
+});
+
+// Insert or update student
+app.post("/api/student", (req, res) => {
+  const data = req.body;
+  const sqlCheck = "SELECT * FROM student WHERE roll_no = ?";
+  db.query(sqlCheck, [data.roll_no], (err, results) => {
+    if (err) return res.status(500).json({ message: "DB error", error: err });
+
+    if (results.length > 0) {
+      // Update existing record
+      const sqlUpdate = `
+        UPDATE student SET
+        F_name=?, M_name=?, L_name=?, Department=?, Course_year=?, student_phone=?,
+        student_email_Id=?, DOB=?, Gender=?, Age=?, guardian_name=?, guardian_phone=?
+        WHERE roll_no=?
+      `;
+      const values = [
+        data.F_name, data.M_name, data.L_name, data.Department, data.Course_year,
+        data.student_phone, data.student_email_Id, data.DOB, data.Gender,
+        data.Age, data.guardian_name, data.guardian_phone, data.roll_no
+      ];
+      db.query(sqlUpdate, values, (err) => {
+        if (err) return res.status(500).json({ message: "Update failed", error: err });
+        res.json({ message: "Student details updated successfully!" });
+      });
+    } else {
+      // Insert new record
+      const sqlInsert = `
+        INSERT INTO student 
+        (roll_no, F_name, M_name, L_name, Department, Course_year, student_phone, student_email_Id, DOB, Gender, Age, guardian_name, guardian_phone)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `;
+      const values = [
+        data.roll_no, data.F_name, data.M_name, data.L_name, data.Department,
+        data.Course_year, data.student_phone, data.student_email_Id, data.DOB,
+        data.Gender, data.Age, data.guardian_name, data.guardian_phone
+      ];
+      db.query(sqlInsert, values, (err) => {
+        if (err) return res.status(500).json({ message: "Insert failed", error: err });
+        res.json({ message: "Student added successfully!" });
+      });
+    }
+  });
+});
