@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Register | Hostel Management</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center min-h-screen">
+  <div class="bg-white shadow-2xl rounded-2xl p-10 w-full max-w-md">
+    <h2 class="text-3xl font-bold text-center text-gray-800 mb-6">Create Account</h2>
+    <form action="/register" method="POST" class="space-y-4">
+      <div>
+        <label class="block text-gray-700 font-semibold">Username</label>
+        <input type="text" name="username" class="w-full mt-1 p-2 border rounded-md focus:ring focus:ring-blue-300" required>
+      </div>
+      <div>
+        <label class="block text-gray-700 font-semibold">Password</label>
+        <input type="password" name="password" class="w-full mt-1 p-2 border rounded-md focus:ring focus:ring-blue-300" required>
+      </div>
+      <div>
+        <label class="block text-gray-700 font-semibold">Role</label>
+        <select name="role" class="w-full mt-1 p-2 border rounded-md focus:ring focus:ring-blue-300" required>
+          <option value="">Select Role</option>
+          <option value="student">Student</option>
+          <option value="admin">Admin</option>
+        </select>
+      </div>
+      <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 rounded-md transition">Register</button>
+    </form>
+    <p class="text-center text-gray-600 mt-4">Already have an account? <a href="/login.html" class="text-blue-600 hover:underline">Login</a></p>
+  </div>
+</body>
+</html>
