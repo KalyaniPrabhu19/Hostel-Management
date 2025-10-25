@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Student Details</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 flex justify-center items-center min-h-screen">
+
+  <div class="bg-white shadow-lg rounded-2xl p-6 w-full max-w-3xl">
+    <h1 class="text-2xl font-bold mb-4 text-center text-blue-700">Student Details</h1>
+
+    <div id="studentData" class="space-y-3 text-gray-700">
+      <p><strong>Student ID:</strong> <span id="student_id"></span></p>
+      <p><strong>Roll No:</strong> <span id="roll_no"></span></p>
+      <p><strong>Name:</strong> <span id="full_name"></span></p>
+      <p><strong>Department:</strong> <span id="department"></span></p>
+      <p><strong>Course Year:</strong> <span id="course_year"></span></p>
+      <p><strong>Date of Birth:</strong> <span id="dob"></span></p>
+      <p><strong>Gender:</strong> <span id="gender"></span></p>
+      <p><strong>Guardian Name:</strong> <span id="guardian_name"></span></p>
+      <p><strong>Guardian Phone:</strong> <span id="guardian_phone"></span></p>
+      <p><strong>Student Email:</strong> <span id="student_email_Id"></span></p>
+      <p><strong>Student Phone:</strong> <span id="student_phone"></span></p>
+      <p><strong>Hostel Name:</strong> <span id="hostel_name"></span></p>
+      <p><strong>Room ID:</strong> <span id="room_id"></span></p>
+      <p><strong>Room Type:</strong> <span id="room_type"></span></p>
+    </div>
+
+    <div class="mt-6 text-center">
+      <button id="logoutBtn" class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition">
+        Logout
+      </button>
+    </div>
+  </div>
+
+  <script>
+    async function fetchStudent() {
+      const user_id = localStorage.getItem("user_id");
+      if (!user_id) {
+        alert("User not logged in!");
+        window.location.href = "login.html";
+        return;
+      }
+
+        try {
+  const res = await fetch(`/api/student?user_id=${user_id}`);
+  console.log("Response status:", res.status);
+  const data = await res.json();
+  console.log("Response data:", data);
+
+
+        if (res.ok && !data.error) {
+          document.getElementById("student_id").textContent = data.student_id || "N/A";
+          document.getElementById("roll_no").textContent = data.roll_no || "N/A";
+          document.getElementById("full_name").textContent =
+            `${data.f_name || ""} ${data.m_name || ""} ${data.l_name || ""}`.trim() || "N/A";
+          document.getElementById("department").textContent = data.department || "N/A";
+          document.getElementById("course_year").textContent = data.course_year || "N/A";
+          document.getElementById("dob").textContent = data.dob ? new Date(data.dob).toLocaleDateString() : "N/A";
+          document.getElementById("gender").textContent = data.gender || "N/A";
+          document.getElementById("guardian_name").textContent = data.guardian_name || "N/A";
+          document.getElementById("guardian_phone").textContent = data.guardian_phone || "N/A";
+          document.getElementById("student_email_Id").textContent = data.student_email_Id || "N/A";
+          document.getElementById("student_phone").textContent = data.student_phone || "N/A";
+          document.getElementById("hostel_name").textContent = data.hostel_name || "N/A";
+          document.getElementById("room_id").textContent = data.room_id || "N/A";
+          document.getElementById("room_type").textContent = data.room_type || "N/A";
+        } else {
+          document.getElementById("studentData").innerHTML =
+            "<p class='text-center text-red-500'>No student record found.</p>";
+        }
+      } catch (err) {
+        console.error(err);
+        document.getElementById("studentData").innerHTML =
+          "<p class='text-center text-red-500'>Error loading data.</p>";
+      }
+    }
+
+    document.getElementById("logoutBtn").addEventListener("click", () => {
+      localStorage.removeItem("user_id");
+      window.location.href = "login.html";
+    });
+
+    // Load data on page open
+    fetchStudent();
+  </script>
+
+</body>
+</html>

@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Student Payment</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 min-h-screen flex items-center justify-center">
+
+  <div class="bg-white shadow-xl rounded-2xl p-8 w-full max-w-3xl">
+    <h1 class="text-2xl font-bold text-blue-700 mb-6 text-center">
+      💰 Hostel Fee Payment
+    </h1>
+
+    <div id="paymentDetails" class="space-y-3 text-gray-700"></div>
+
+    <div id="paymentForm" class="hidden mt-6 border-t pt-6">
+      <h2 class="text-xl font-semibold mb-4">Make Payment</h2>
+
+      <label class="block mb-2 font-medium">Payment Method:</label>
+      <select id="payment_method" class="border rounded-lg px-3 py-2 w-full">
+        <option value="online">Online</option>
+        <option value="card">Card</option>
+        <option value="cash">Cash</option>
+      </select>
+
+      <label class="block mt-4 mb-2 font-medium">Remarks (optional):</label>
+      <input id="remarks" type="text" placeholder="Any notes..."
+             class="border rounded-lg px-3 py-2 w-full">
+
+      <button id="payBtn"
+        class="mt-6 bg-blue-600 text-white w-full py-2 rounded-lg hover:bg-blue-700">
+        Pay Now
+      </button>
+    </div>
+  </div>
+
+  <script>
+    const user_id = localStorage.getItem("user_id") || "UV25"; // for demo use
+
+    async function loadFeePayments() {
+      const container = document.getElementById("paymentDetails");
+      try {
+        const res = await fetch(`/api/payment/${user_id}`);
+        const data = await res.json();
+
+        if (data.error) {
+          container.innerHTML = `<p class="text-red-600">${data.error}</p>`;
+          return;
+        }
+
+        const { student, payment } = data;
+        container.innerHTML = `
+          <div class="bg-gray-50 p-4 rounded-xl shadow">
+            <p><strong>Student ID:</strong> ${student.student_id}</p>
+            <p><strong>Room ID:</strong> ${student.room_id}</p>
+            <p><strong>Amount:</strong> ₹${payment.amount}</p>
+            <p><strong>Due Date:</strong> ${new Date(payment.due_date).toLocaleDateString()}</p>
+            <p><strong>Status:</strong> 
+              <span class="${payment.status === 'paid' ? 'text-green-600' :
+                          payment.status === 'overdue' ? 'text-red-600' : 'text-yellow-600'} font-semibold">
+                ${payment.status}
+              </span>
+            </p>
+            <p><strong>Payment Date:</strong> ${payment.payment_date ? new Date(payment.payment_date).toLocaleString() : "—"}</p>
+          </div>
+        `;
+
+        if (payment.status !== "paid") {
+          document.getElementById("paymentForm").classList.remove("hidden");
+        } else {
+          document.getElementById("paymentForm").classList.add("hidden");
+        }
+      } catch (err) {
+        console.error("❌ Fetch Error:", err);
+        container.innerHTML = `<p class="text-red-600">Error loading fee_payments data.</p>`;
+      }
+    }
+
+    document.getElementById("payBtn").addEventListener("click", async () => {
+      const payment_method = document.getElementById("payment_method").value;
+      const remarks = document.getElementById("remarks").value;
+
+      const res = await fetch(`/api/pay/${user_id}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ payment_method, remarks })
+      });
+
+      const data = await res.json();
+      alert(data.message || data.error);
+      loadFeePayments();
+    });
+
+    loadFeePayments();
+  </script>
+</body>
+</html>

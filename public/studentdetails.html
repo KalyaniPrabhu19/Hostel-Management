@@ -3,148 +3,102 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Edit Student Details</title>
+  <title>Student Details</title>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-gray-100 min-h-screen flex flex-col">
-  <!-- Navbar -->
-  <nav class="bg-blue-600 p-4 text-white flex justify-between">
-    <h1 class="font-bold text-2xl">🏠 Hostel Management</h1>
-    <a href="student.html" class="bg-white text-blue-600 px-3 py-1 rounded-md font-semibold hover:bg-blue-100">Back</a>
-  </nav>
+<body class="bg-gray-100 min-h-screen flex flex-col items-center py-10">
+  <div class="bg-white shadow-lg rounded-2xl p-8 w-full max-w-3xl">
+    <h1 class="text-2xl font-semibold text-center text-indigo-600 mb-6">Student Details</h1>
 
-  <!-- Form Container -->
-  <main class="flex-grow flex justify-center items-center p-6">
-    <form id="studentForm" class="bg-white rounded-2xl shadow-xl p-8 w-full max-w-4xl grid grid-cols-2 gap-6">
-
-      <h2 class="col-span-2 text-2xl font-bold text-center text-gray-700 mb-4">
-        📝 Student Details Form
-      </h2>
-
-      <!-- Left Side -->
-      <div class="space-y-4">
-        <div>
-          <label class="block text-sm font-semibold text-gray-600 mb-1">Roll No</label>
-          <input type="text" name="roll_no" id="roll_no" class="w-full border rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-400 outline-none" required>
-        </div>
-
-        <div>
-          <label class="block text-sm font-semibold text-gray-600 mb-1">First Name</label>
-          <input type="text" name="f_name" id="f_name" class="w-full border rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-400 outline-none" required>
-        </div>
-
-        <div>
-          <label class="block text-sm font-semibold text-gray-600 mb-1">Middle Name</label>
-          <input type="text" name="m_name" id="m_name" class="w-full border rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-400 outline-none">
-        </div>
-
-        <div>
-          <label class="block text-sm font-semibold text-gray-600 mb-1">Last Name</label>
-          <input type="text" name="l_name" id="l_name" class="w-full border rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-400 outline-none" required>
-        </div>
-
-        <div>
-          <label class="block text-sm font-semibold text-gray-600 mb-1">Department</label>
-          <input type="text" name="department" id="department" class="w-full border rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-400 outline-none" required>
-        </div>
-
-        <div>
-          <label class="block text-sm font-semibold text-gray-600 mb-1">Course Year</label>
-          <input type="number" name="course_year" id="course_year" min="1" max="4" class="w-full border rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-400 outline-none" required>
-        </div>
+    <form id="studentForm" class="space-y-4">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div><label>Roll No</label><input id="roll_no" class="border rounded-lg p-2 w-full" /></div>
+        <div><label>First Name</label><input id="f_name" class="border rounded-lg p-2 w-full" /></div>
+        <div><label>Middle Name</label><input id="m_name" class="border rounded-lg p-2 w-full" /></div>
+        <div><label>Last Name</label><input id="l_name" class="border rounded-lg p-2 w-full" /></div>
       </div>
 
-      <!-- Right Side -->
-      <div class="space-y-4">
-        <div>
-          <label class="block text-sm font-semibold text-gray-600 mb-1">Phone Number</label>
-          <input type="tel" name="student_phone" id="student_phone" pattern="[0-9]{10}" class="w-full border rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-400 outline-none" required>
-        </div>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div><label>Department</label><input id="department" class="border rounded-lg p-2 w-full" /></div>
+        <div><label>Course Year</label><input id="course_year" class="border rounded-lg p-2 w-full" /></div>
+      </div>
 
-        <div>
-          <label class="block text-sm font-semibold text-gray-600 mb-1">Email ID</label>
-          <input type="email" name="student_email_Id" id="student_email_Id" class="w-full border rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-400 outline-none" required>
-        </div>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div><label>Phone</label><input id="student_phone" class="border rounded-lg p-2 w-full" /></div>
+        <div><label>Email</label><input id="student_email_Id" type="email" class="border rounded-lg p-2 w-full" /></div>
+      </div>
 
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div><label>DOB</label><input id="dob" type="date" class="border rounded-lg p-2 w-full" /></div>
         <div>
-          <label class="block text-sm font-semibold text-gray-600 mb-1">Date of Birth</label>
-          <input type="date" name="dob" id="dob" class="w-full border rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-400 outline-none" required>
-        </div>
-
-        <div>
-          <label class="block text-sm font-semibold text-gray-600 mb-1">Gender</label>
-          <select name="gender" id="gender" class="w-full border rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-400 outline-none" required>
-            <option value="">Select Gender</option>
-            <option value="Male">Male</option>
-            <option value="Female">Female</option>
-            <option value="Other">Other</option>
+          <label>Gender</label>
+          <select id="gender" class="border rounded-lg p-2 w-full">
+            <option value="">Select</option>
+            <option>Male</option>
+            <option>Female</option>
           </select>
         </div>
-
-        <div>
-          <label class="block text-sm font-semibold text-gray-600 mb-1">Age</label>
-          <input type="number" name="age" id="age" min="16" max="30" class="w-full border rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-400 outline-none" required>
-        </div>
-
-        <div>
-          <label class="block text-sm font-semibold text-gray-600 mb-1">Guardian Name</label>
-          <input type="text" name="guardian_name" id="guardian_name" class="w-full border rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-400 outline-none">
-        </div>
-
-        <div>
-          <label class="block text-sm font-semibold text-gray-600 mb-1">Guardian Phone</label>
-          <input type="tel" name="guardian_phone" id="guardian_phone" pattern="[0-9]{10}" class="w-full border rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-400 outline-none">
-        </div>
+        <div><label>Age</label><input id="age" type="number" class="border rounded-lg p-2 w-full" /></div>
       </div>
 
-      <div class="col-span-2 text-center mt-4">
-        <button type="submit" class="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 transition-all">Save Changes</button>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div><label>Guardian Name</label><input id="guardian_name" class="border rounded-lg p-2 w-full" /></div>
+        <div><label>Guardian Phone</label><input id="guardian_phone" class="border rounded-lg p-2 w-full" /></div>
       </div>
+
+      <div>
+        <label>Hostel Name</label>
+        <input id="hostel_name" readonly class="border rounded-lg p-2 w-full bg-gray-100 text-gray-700" />
+      </div>
+
+      <button type="submit" class="bg-indigo-600 text-white px-6 py-2 rounded-lg hover:bg-indigo-700 transition w-full">
+        Save Details
+      </button>
+      <p id="message" class="text-center mt-4 text-sm"></p>
     </form>
-  </main>
+  </div>
 
   <script>
-    const rollNo = localStorage.getItem("roll_no"); // assume this was set during login
-
-    // Prefill data when the page loads
-    window.addEventListener("DOMContentLoaded", async () => {
-      if (rollNo) {
-        document.getElementById("roll_no").value = rollNo;
-        try {
-          const res = await fetch(`http://localhost:5000/api/student/${rollNo}`);
-          if (res.ok) {
-            const data = await res.json();
-            for (const key in data) {
-              if (document.getElementById(key)) {
-                document.getElementById(key).value = data[key];
-              }
-            }
-          }
-        } catch (err) {
-          console.error("Error loading data:", err);
-        }
-      }
-    });
-
-    // Handle form submit
     document.getElementById("studentForm").addEventListener("submit", async (e) => {
-      e.preventDefault();
-      const formData = Object.fromEntries(new FormData(e.target).entries());
+  e.preventDefault();
+  
+  const user_id = localStorage.getItem("user_id"); // same as student_id
+  console.log("🟢 Logged in user_id:", user_id);
 
-      const response = await fetch("http://localhost:5000/api/student", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData)
-      });
+  const formData = {
+    user_id,
+    roll_no: document.getElementById("roll_no").value,
+    f_name: document.getElementById("f_name").value,
+    m_name: document.getElementById("m_name").value,
+    l_name: document.getElementById("l_name").value,
+    department: document.getElementById("department").value,
+    course_year: document.getElementById("course_year").value,
+    student_phone: document.getElementById("student_phone").value,
+    student_email_Id: document.getElementById("student_email_Id").value,
+    dob: document.getElementById("dob").value,
+    gender: document.getElementById("gender").value,
+    age: document.getElementById("age").value,
+    guardian_name: document.getElementById("guardian_name").value,
+    guardian_phone: document.getElementById("guardian_phone").value,
+  };
 
-      const result = await response.json();
-      if (response.ok) {
-        alert("✅ Details updated successfully!");
-        window.location.href = "student.html";
-      } else {
-        alert("⚠️ " + result.message);
-      }
+  try {
+    const res = await fetch("/saveStudentDetails", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(formData),
     });
+
+    const data = await res.json();
+    console.log("Server response:", data);
+
+    alert(data.message);
+  } catch (error) {
+    console.error("Error:", error);
+    alert("Error saving student details");
+  }
+});
+
   </script>
 </body>
 </html>

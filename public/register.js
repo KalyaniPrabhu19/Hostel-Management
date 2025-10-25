@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Register</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 flex justify-center items-center h-screen">
+
+  <div class="bg-white p-8 rounded-xl shadow-lg w-full max-w-md">
+    <h2 class="text-2xl font-semibold text-center text-indigo-600 mb-6">Register</h2>
+
+    <form id="registerForm" class="space-y-4">
+      <div>
+        <label class="block text-gray-700 mb-1">User ID</label>
+        <input id="user_id" type="text" class="w-full border border-gray-300 rounded-lg p-2" required>
+      </div>
+
+      <div>
+        <label class="block text-gray-700 mb-1">Password</label>
+        <input id="password" type="password" class="w-full border border-gray-300 rounded-lg p-2" required>
+      </div>
+
+      <div class="mt-4">
+        <label class="block text-gray-700 mb-2">Role</label>
+        <div class="flex gap-6">
+          <label class="flex items-center space-x-2">
+            <input type="radio" name="role" value="student" required>
+            <span>Student</span>
+          </label>
+          <label class="flex items-center space-x-2">
+            <input type="radio" name="role" value="admin" required>
+            <span>Admin</span>
+          </label>
+        </div>
+      </div>
+
+      <button type="submit" class="w-full bg-indigo-600 text-white py-2 rounded-lg hover:bg-indigo-700 transition">
+        Register
+      </button>
+
+      <p id="message" class="text-center text-sm mt-3"></p>
+    </form>
+  </div>
+
+  <script>
+    document.getElementById("registerForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      const user_id = document.getElementById("user_id").value;
+      const password = document.getElementById("password").value;
+      const role = document.querySelector('input[name="role"]:checked').value;
+
+      try {
+        const res = await fetch("/register", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ user_id, password, role })
+        });
+
+        const data = await res.json();
+
+        if (res.ok) {
+          localStorage.setItem("user_id", user_id);
+          localStorage.setItem("role", role);
+
+          // ✅ Redirect based on role
+          window.location.href = data.redirect;
+        } else {
+          document.getElementById("message").textContent = data.message || "Registration failed!";
+          document.getElementById("message").className = "text-red-600 text-center";
+        }
+      } catch (err) {
+        console.error("Registration error:", err);
+        document.getElementById("message").textContent = "Server error!";
+        document.getElementById("message").className = "text-red-600 text-center";
+      }
+    });
+  </script>
+
+</body>
+</html>

@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Dashboard - Registered Students</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gradient-to-br from-gray-100 to-blue-100 min-h-screen flex flex-col items-center">
+  <!-- Header -->
+  <header class="w-full bg-blue-700 text-white py-5 shadow-lg text-center">
+    <h1 class="text-2xl font-semibold tracking-wide">🏠 Admin Dashboard</h1>
+    <p class="text-sm opacity-90">Manage Hostel Student Registrations</p>
+  </header>
+
+  <!-- Main Content -->
+  <main class="w-full max-w-5xl bg-white shadow-2xl rounded-2xl mt-10 p-8">
+    <div class="flex justify-between items-center mb-6">
+      <h2 class="text-xl font-bold text-gray-700">Registered Students</h2>
+      <button id="viewStudents"
+        class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-lg transition transform hover:scale-105 shadow-md">
+        View Registered Students
+      </button>
+    </div>
+
+    <div class="overflow-x-auto rounded-lg border border-gray-200">
+      <table class="min-w-full divide-y divide-gray-200 text-left">
+        <thead class="bg-blue-600 text-white">
+          <tr>
+            <th class="px-6 py-3 text-sm font-medium">Student ID</th>
+            <th class="px-6 py-3 text-sm font-medium">First Name</th>
+            <th class="px-6 py-3 text-sm font-medium">Last Name</th>
+            <th class="px-6 py-3 text-sm font-medium">Room</th>
+            <th class="px-6 py-3 text-sm font-medium">Hostel ID</th>
+            <th class="px-6 py-3 text-sm font-medium">Hostel</th>
+          </tr>
+        </thead>
+        <tbody id="studentsBody" class="divide-y divide-gray-100">
+          <tr class="text-gray-500 text-center">
+            <td colspan="5" class="px-6 py-4 italic">Click “View Registered Students” to load data</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </main>
+
+  <script>
+  document.getElementById("viewStudents").addEventListener("click", async () => {
+    const admin_id = localStorage.getItem("admin_id");
+    console.log("🟦 admin_id:", admin_id);
+
+    if (!admin_id) {
+      alert("⚠️ No admin_id found. Please log in again.");
+      return;
+    }
+
+    try {
+      const response = await fetch(`/admin/students?admin_id=${admin_id}`);
+      const students = await response.json();
+
+      const tbody = document.getElementById("studentsBody");
+      tbody.innerHTML = "";
+
+      if (!students || students.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="5" class="text-center text-gray-500 py-4 italic">
+              No students found for this admin.
+            </td>
+          </tr>`;
+        return;
+      }
+
+      students.forEach((s, i) => {
+        const row = `
+          <tr class="hover:bg-blue-50 transition">
+            <td class="px-6 py-3">${s.student_id || "—"}</td>
+            <td class="px-6 py-3">${s.f_name || "—"}</td>
+            <td class="px-6 py-3">${s.l_name || "—"}</td>
+            <td class="px-6 py-3">${s.room_id || "—"}</td>
+            <td class="px-6 py-3">${s.hostel_id || "—"}</td>
+            <td class="px-6 py-3">${s.hostel_name || "—"}</td>
+          </tr>
+        `;
+        tbody.innerHTML += row;
+      });
+    } catch (err) {
+      console.error("Error fetching students:", err);
+      alert("Something went wrong while fetching data!");
+    }
+  });
+  </script>
+</body>
+</html>

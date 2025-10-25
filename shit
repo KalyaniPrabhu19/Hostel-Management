@@ -91,3 +91,138 @@ app.post("/api/student", (req, res) => {
     }
   });
 });
+
+
+// Login route
+app.post('/login', (req, res) => {
+  const { user_id, password } = req.body;
+
+  if (!user_id || !password) {
+    return res.status(400).send('Missing user ID or password');
+  }
+
+  const query = 'SELECT * FROM users WHERE user_id = ?';
+  connection.query(query, [user_id], async (err, results) => {
+    if (err) {
+      console.error(err);
+      return res.status(500).send('Database error');
+    }
+
+    if (results.length === 0) {
+      return res.status(401).send('Invalid user ID or password');
+    }
+
+    const user = results[0];
+    const match = await compare(password, user.password);
+
+    if (!match) {
+      return res.status(401).send('Invalid user ID or password');
+    }
+
+    res.status(200).json({ message: 'Login successful', role: user.role });
+    
+  });
+});
+app.post('/student/details', (req, res) => {
+  const data = req.body;
+
+  // user_id is the foreign key reference from 'users'
+  const {
+    student_id,
+    roll_no,
+    f_name,
+    m_name,
+    l_name,
+    department,
+    course_year,
+    student_phone,
+    student_email_Id,
+    dob,
+    gender,
+    age,
+    guardian_name,
+    guardian_phone
+  } = data;
+
+  if (
+    !student_id ||!roll_no|| !f_name || !l_name || !department ||
+    !course_year || !student_phone || !student_email_Id ||
+    !dob || !gender || !age || !guardian_name || !guardian_phone
+  ) {
+    return res.status(400).send('Missing required fields');
+  }
+
+  const query = `
+    INSERT INTO students
+      (student_id,roll_no, f_name, m_name, l_name, department, course_year,
+       student_phone, student_email_Id, dob, gender, age, guardian_name, guardian_phone)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?)
+    ON DUPLICATE KEY UPDATE
+      student_id = VALUES(student_id),
+      roll_no = VALUES(roll_no),
+      f_name = VALUES(f_name),
+      m_name = VALUES(m_name),
+      l_name = VALUES(l_name),
+      department = VALUES(department),
+      course_year = VALUES(course_year),
+      student_phone = VALUES(student_phone),
+      student_email_Id = VALUES(student_email_Id),
+      dob = VALUES(dob),
+      gender = VALUES(gender),
+      age = VALUES(age),
+      guardian_name = VALUES(guardian_name),
+      guardian_phone = VALUES(guardian_phone)
+  `;
+
+  const values = [
+    student_id, roll_no, f_name, m_name || '', l_name, department, course_year,
+    student_phone, student_email_Id, dob, gender, age,
+    guardian_name, guardian_phone
+  ];
+
+  connection.query(query, values, (err, result) => {
+    if (err) {
+      console.error('❌ Database error:', err);
+      return res.status(500).send('Database error');
+    }
+    res.status(200).send('✅ Student details saved successfully');
+  });
+});
+app.post('/register', async (req, res) => {
+  const { user_id, password, role } = req.body;
+  try {
+    const hashedPassword = await hash(password, 10);
+    const query = 'INSERT INTO users (user_id, password, role) VALUES (?, ?, ?)';
+    connection.query(query, [user_id, hashedPassword, role], (err, result) => {
+      if (err) {
+        console.error(err);
+         return res.status(500).json({ message: 'Database error', error: err.message });
+}
+
+      res.status(200).send('Registered successfully');
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Internal server error');
+  }
+});
+app.get("/student/:id", (req, res) => {
+  const { id } = req.params;
+
+  const query = `
+    SELECT 
+      s.*, 
+      h.hostel_name 
+    FROM students s
+    LEFT JOIN hostels h ON s.hostel_id = h.hostel_id
+    WHERE s.student_id = ?;
+  `;
+
+  connection.query(query, [id], (err, results) => {
+    if (err) {
+      console.error("Error fetching student details:", err);
+      return res.status(500).json({ message: "Database error" });
+    }
+    res.json(results[0] || {});
+  });
+});

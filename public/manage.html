@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Hostels</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 min-h-screen flex flex-col items-center py-10">
+
+  <h1 class="text-3xl font-bold mb-8 text-blue-700">🏠 Managed Hostels</h1>
+
+  <div id="hostelList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 w-11/12"></div>
+
+  <script>
+    // ✅ Get currently logged-in user (admin)
+    // Example: you store it in localStorage after login
+    const loggedUser = JSON.parse(localStorage.getItem("user"));
+    // Example format: { user_id: "ADM555", role: "admin" }
+
+    if (!loggedUser || loggedUser.role !== "admin") {
+      document.body.innerHTML = `
+        <div class="text-center mt-20">
+          <p class="text-red-600 text-xl">⚠️ You must log in as an admin to view this page.</p>
+        </div>`;
+    } else {
+      loadHostels(loggedUser.user_id);
+    }
+
+    async function loadHostels(userId) {
+      try {
+        const res = await fetch(`http://localhost:5000/admin/hostels/${userId}`);
+        if (!res.ok) throw new Error("Failed to fetch hostels");
+
+        const hostels = await res.json();
+        const container = document.getElementById("hostelList");
+        container.innerHTML = "";
+
+        if (hostels.length === 0) {
+          container.innerHTML = `<p class="text-gray-600 text-lg">No hostels found for this admin.</p>`;
+          return;
+        }
+
+        hostels.forEach(h => {
+          const card = document.createElement("div");
+          card.className =
+            "bg-white p-5 rounded-2xl shadow-md hover:shadow-lg transition-all";
+          card.innerHTML = `
+            <h2 class="text-2xl font-semibold text-blue-600 mb-2">${h.hostel_name}</h2>
+            <p class="text-gray-700"><strong>Address:</strong> ${h.address}</p>
+            <p class="text-gray-700"><strong>Total Rooms:</strong> ${h.total_rooms}</p>
+          `;
+          container.appendChild(card);
+        });
+
+      } catch (err) {
+        console.error(err);
+        document.getElementById("hostelList").innerHTML = `
+          <p class="text-red-600 text-lg">⚠️ Error loading hostels: ${err.message}</p>`;
+      }
+    }
+  </script>
+</body>
+</html>
