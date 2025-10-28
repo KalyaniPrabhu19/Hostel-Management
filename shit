@@ -226,3 +226,19 @@ app.get("/student/:id", (req, res) => {
     res.json(results[0] || {});
   });
 });
+app.get('/admin/students', (req, res) => {
+  const adminId = req.query.admin_id;
+
+  const query = `
+    SELECT s.student_id, s.f_name, s.l_name, s.room_id, s.hostel_id,h.hostel_name
+    FROM students s
+    JOIN hostels h ON s.hostel_id = h.hostel_id
+    WHERE h.admin_id = ?;
+  `;
+
+  connection.query(query, [adminId], (err, results) => {
+    if (err) return res.status(500).send('Database error');
+    res.json(results);
+  });
+});
+

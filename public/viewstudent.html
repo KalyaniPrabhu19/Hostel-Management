@@ -28,8 +28,8 @@
         <thead class="bg-blue-600 text-white">
           <tr>
             <th class="px-6 py-3 text-sm font-medium">Student ID</th>
-            <th class="px-6 py-3 text-sm font-medium">First Name</th>
-            <th class="px-6 py-3 text-sm font-medium">Last Name</th>
+            <th class="px-6 py-3 text-sm font-medium"> Name</th>
+            <th class="px-6 py-3 text-sm font-medium">Email</th>
             <th class="px-6 py-3 text-sm font-medium">Room</th>
             <th class="px-6 py-3 text-sm font-medium">Hostel ID</th>
             <th class="px-6 py-3 text-sm font-medium">Hostel</th>
@@ -44,51 +44,64 @@
     </div>
   </main>
 
-  <script>
-  document.getElementById("viewStudents").addEventListener("click", async () => {
-    const admin_id = localStorage.getItem("admin_id");
-    console.log("🟦 admin_id:", admin_id);
+<script>
+document.getElementById("viewStudents").addEventListener("click", async () => {
+  const admin_id = localStorage.getItem("user_id");
+  console.log("🟦 admin_id:", admin_id);
 
-    if (!admin_id) {
-      alert("⚠️ No admin_id found. Please log in again.");
+  if (!admin_id) {
+    alert("⚠️ No admin_id found. Please log in again.");
+    return;
+  }
+
+  const tbody = document.getElementById("studentsBody");
+  tbody.innerHTML = `
+    <tr>
+      <td colspan="6" class="text-center py-4 text-blue-600 animate-pulse">
+        Loading students...
+      </td>
+    </tr>`;
+
+  try {
+    const response = await fetch(`/admin/students?admin_id=${admin_id}`);
+    if (!response.ok) {
+      const text = await response.text();
+      console.error("❌ Server Error:", text);
+      alert(`Error ${response.status}: ${response.statusText}\n\n${text}`);
       return;
     }
 
-    try {
-      const response = await fetch(`/admin/students?admin_id=${admin_id}`);
-      const students = await response.json();
+    const students = await response.json();
+    tbody.innerHTML = "";
 
-      const tbody = document.getElementById("studentsBody");
-      tbody.innerHTML = "";
-
-      if (!students || students.length === 0) {
-        tbody.innerHTML = `
-          <tr>
-            <td colspan="5" class="text-center text-gray-500 py-4 italic">
-              No students found for this admin.
-            </td>
-          </tr>`;
-        return;
-      }
-
-      students.forEach((s, i) => {
-        const row = `
-          <tr class="hover:bg-blue-50 transition">
-            <td class="px-6 py-3">${s.student_id || "—"}</td>
-            <td class="px-6 py-3">${s.f_name || "—"}</td>
-            <td class="px-6 py-3">${s.l_name || "—"}</td>
-            <td class="px-6 py-3">${s.room_id || "—"}</td>
-            <td class="px-6 py-3">${s.hostel_id || "—"}</td>
-            <td class="px-6 py-3">${s.hostel_name || "—"}</td>
-          </tr>
-        `;
-        tbody.innerHTML += row;
-      });
-    } catch (err) {
-      console.error("Error fetching students:", err);
-      alert("Something went wrong while fetching data!");
+    if (!students || students.length === 0) {
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="6" class="text-center text-gray-500 py-4 italic">
+            No students found for this admin.
+          </td>
+        </tr>`;
+      return;
     }
-  });
-  </script>
+
+    students.forEach(s => {
+      const row = `
+        <tr class="hover:bg-blue-50 transition">
+          <td class="px-6 py-3">${s.student_id || "—"}</td>
+          <td class="px-6 py-3">${s.f_name || "—"}</td>
+          <td class="px-6 py-3">${s.student_email_Id || "—"}</td>
+          <td class="px-6 py-3">${s.room_id || "—"}</td>
+          <td class="px-6 py-3">${s.hostel_id || "—"}</td>
+          <td class="px-6 py-3">${s.hostel_name || "—"}</td>
+        </tr>`;
+      tbody.innerHTML += row;
+    });
+  } catch (err) {
+    console.error("🔥 Fetch error:", err);
+    alert(`Something went wrong while fetching students:\n${err.message}`);
+  }
+});
+</script>
+
 </body>
 </html>

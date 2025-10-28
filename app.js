@@ -208,8 +208,7 @@ app.get("/api/student", (req, res) => {
   });
 });
 
-
-// ✅ Fetch all hostels under a specific admin
+//manage
 app.get('/admin/hostels/:admin_id', (req, res) => {
   const adminId = req.params.admin_id;
 
@@ -238,12 +237,14 @@ app.get('/admin/hostels/:admin_id', (req, res) => {
   });
 });
 
-// Example: Get all students for the logged-in admin
+
+
+// Get all students belonging to hostels managed by a specific admin
 app.get('/admin/students', (req, res) => {
   const adminId = req.query.admin_id;
 
   const query = `
-    SELECT s.student_id, s.f_name, s.l_name, s.room_id, s.hostel_id,h.hostel_name
+    SELECT s.student_id, s.f_name, s.student_email_Id, s.room_id, s.hostel_id,h.hostel_name
     FROM students s
     JOIN hostels h ON s.hostel_id = h.hostel_id
     WHERE h.admin_id = ?;
@@ -254,6 +255,8 @@ app.get('/admin/students', (req, res) => {
     res.json(results);
   });
 });
+
+
 
 // Show all rooms + hostels + student booking status
 app.get('/api/rooms', (req, res) => {
@@ -285,32 +288,94 @@ app.get('/api/rooms', (req, res) => {
 // Book a room
 app.post('/api/book-room', (req, res) => {
   const { room_id, student_id } = req.body;
+  console.log("📩 Booking attempt received:", { room_id, student_id });
 
-  const checkQuery = 'SELECT room_id FROM students WHERE student_id = ?';
-  connection.query(checkQuery, [student_id], (err, result) => {
-    if (err) return res.status(500).json({ message: 'Database error', error: err });
+  if (!room_id || !student_id) {
+    console.log("❌ Missing data");
+    return res.status(400).json({ message: "Missing room_id or student_id" });
+  }
 
-    if (result[0]?.room_id) {
-      return res.status(400).json({ message: 'You already have a booked room.' });
+  const checkStudent = 'SELECT room_id FROM students WHERE student_id = ?';
+  connection.query(checkStudent, [student_id], (err, studentResult) => {
+    if (err) {
+      console.error("❌ Error checking student:", err);
+      return res.status(500).json({ message: "Error checking student", error: err });
     }
 
-    const updateRoom = `
-      UPDATE rooms 
-      SET occupied = occupied + 1,
-          status = CASE WHEN occupied + 1 >= capacity THEN 'full' ELSE 'available' END
-      WHERE room_id = ?;
-    `;
-    connection.query(updateRoom, [room_id], err2 => {
-      if (err2) return res.status(500).json({ message: 'Error updating room', error: err2 });
+    if (studentResult[0]?.room_id) {
+      console.log("⚠️ Student already booked:", studentResult[0].room_id);
+      return res.status(400).json({ message: "You already have a booked room." });
+    }
 
-      const updateStudent = 'UPDATE students SET room_id = ? WHERE student_id = ?';
-      connection.query(updateStudent, [room_id, student_id], err3 => {
-        if (err3) return res.status(500).json({ message: 'Error booking room', error: err3 });
-        res.json({ message: 'Room booked successfully!' });
+    const getRoom = 'SELECT hostel_id, capacity FROM rooms WHERE room_id = ?';
+    connection.query(getRoom, [room_id], (err2, roomResult) => {
+      if (err2) {
+        console.error("❌ Error fetching room:", err2);
+        return res.status(500).json({ message: "Error fetching room", error: err2 });
+      }
+
+      if (roomResult.length === 0) {
+        console.log("⚠️ Room not found");
+        return res.status(404).json({ message: "Room not found" });
+      }
+
+      const { hostel_id, capacity } = roomResult[0];
+      console.log(`🏠 Found room ${room_id}, capacity ${capacity}`);
+
+      const countQuery = 'SELECT COUNT(*) AS bookedCount FROM students WHERE room_id = ?';
+      connection.query(countQuery, [room_id], (err3, countResult) => {
+        if (err3) {
+          console.error("❌ Error counting bookings:", err3);
+          return res.status(500).json({ message: "Error counting bookings", error: err3 });
+        }
+
+        const bookedCount = countResult[0].bookedCount;
+        console.log(`👥 Booked count: ${bookedCount}`);
+
+        if (bookedCount >= capacity) {
+          console.log("🚫 Room is full");
+          return res.status(400).json({ message: "Room is already full." });
+        }
+
+        const updateStudent = `
+          UPDATE students 
+          SET room_id = ?, hostel_id = ?
+          WHERE student_id = ?;
+        `;
+        console.log(`📝 Updating student ${student_id} with room ${room_id}`);
+        connection.query(updateStudent, [room_id, hostel_id, student_id], (err4) => {
+          if (err4) {
+            console.error("❌ Error updating student:", err4);
+            return res.status(500).json({ message: "Error updating student", error: err4 });
+          }
+
+          const updateStatus = `
+            UPDATE rooms 
+            SET status = CASE 
+                          WHEN (SELECT COUNT(*) FROM students WHERE room_id = ?) >= capacity 
+                          THEN 'full' 
+                          ELSE 'available' 
+                        END
+            WHERE room_id = ?;
+          `;
+          console.log(`🔁 Updating room status for room_id ${room_id}`);
+          connection.query(updateStatus, [room_id, room_id], (err5) => {
+            if (err5) {
+              console.error("❌ Error updating room status:", err5);
+              return res.status(500).json({ message: "Error updating room", error: err5 });
+            }
+
+            console.log("✅ Room booked successfully!");
+            res.json({ message: "Room booked successfully!" });
+          });
+        });
       });
     });
   });
 });
+
+
+
 
 app.get("/api/payment/:student_id", (req, res) => {
   const { student_id } = req.params;
@@ -430,28 +495,87 @@ app.get("/", (req, res) => {
 });
 
 //admin manage hoste and rooms
-app.get('/admin/manage/:admin_id', (req, res) => {
-  const adminId = req.params.admin_id;
+app.get("/admin/data/:admin_id", (req, res) => {
+  const { admin_id } = req.params;
 
   const query = `
     SELECT 
-      h.hostel_id, h.hostel_name, h.address,
-      r.room_id, r.room_number, r.room_type, r.capacity,
-      f.payment_id, f.amount, f.status AS payment_status
+      h.hostel_id, h.hostel_name,
+      r.room_id, r.room_type, r.status,
+      f.student_id, f.amount, f.status AS payment_status, f.payment_date
     FROM hostels h
-    JOIN rooms r ON h.hostel_id = r.hostel_id
-    LEFT JOIN fee_payments f ON r.room_id = f.room_id
-    JOIN admins a ON h.admin_id = a.admin_id
-    WHERE a.admin_id = ?;
+    LEFT JOIN rooms r ON h.hostel_id = r.hostel_id
+    LEFT JOIN students s ON s.hostel_id = h.hostel_id
+    LEFT JOIN fee_payments f ON f.student_id = s.student_id
+    WHERE h.admin_id = ?;
   `;
 
-  connection.query(query, [adminId], (err, results) => {
-    if (err) {
-      console.error("❌ Database Error:", err);
-      return res.status(500).json({ error: "Database error" });
-    }
+  connection.query(query, [admin_id], (err, results) => {
+    if (err) return res.json({ success: false, message: err.message });
 
-    res.json(results);
+    const hostelsMap = {};
+
+    results.forEach(row => {
+      if (!hostelsMap[row.hostel_id]) {
+        hostelsMap[row.hostel_id] = {
+          hostel_id: row.hostel_id,
+          hostel_name: row.hostel_name,
+          rooms: new Map(),
+          payments: new Map()
+        };
+      }
+
+      // ✅ Deduplicate rooms using Map
+      if (row.room_id && !hostelsMap[row.hostel_id].rooms.has(row.room_id)) {
+        hostelsMap[row.hostel_id].rooms.set(row.room_id, {
+          room_id: row.room_id,
+          room_type: row.room_type,
+          status: row.status
+        });
+      }
+
+      // ✅ Deduplicate payments using student_id + amount combo key
+      if (row.student_id && row.amount !== null) {
+        const key = `${row.student_id}-${row.amount}-${row.payment_date}`;
+        if (!hostelsMap[row.hostel_id].payments.has(key)) {
+          hostelsMap[row.hostel_id].payments.set(key, {
+            student_id: row.student_id,
+            amount: row.amount,
+            status: row.payment_status,
+            payment_date: row.payment_date
+          });
+        }
+      }
+    });
+
+    // Convert maps to arrays before sending
+    const hostels = Object.values(hostelsMap).map(h => ({
+      hostel_id: h.hostel_id,
+      hostel_name: h.hostel_name,
+      rooms: Array.from(h.rooms.values()),
+      payments: Array.from(h.payments.values())
+    }));
+
+    res.json({ success: true, hostels });
+  });
+});
+
+
+// Delete hostel
+app.delete("/admin/deleteHostel/:id", (req, res) => {
+  const { id } = req.params;
+  connection.query("DELETE FROM hostels WHERE hostel_id = ?", [id], err => {
+    if (err) return res.json({ success: false, message: err.message });
+    res.json({ success: true, message: "🏠 Hostel deleted successfully!" });
+  });
+});
+
+// Delete room
+app.delete("/admin/deleteRoom/:id", (req, res) => {
+  const { id } = req.params;
+  connection.query("DELETE FROM rooms WHERE room_id = ?", [id], err => {
+    if (err) return res.json({ success: false, message: err.message });
+    res.json({ success: true, message: "🛏️ Room deleted successfully!" });
   });
 });
 
