@@ -1,43 +1,93 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Student Dashboard</title>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-gray-100">
-  <nav class="bg-blue-600 p-4 text-white flex justify-between">
-    <h1 class="font-bold text-2xl">🏠 Hostel Management</h1>
-    <a href="/" class="bg-white text-blue-600 px-3 py-1 rounded-md font-semibold hover:bg-blue-100">Logout</a>
-  </nav>
+<body class="bg-gradient-to-br from-purple-100 via-blue-100 to-green-100 min-h-screen flex">
 
-  <main class="p-6">
-    <h2 class="text-2xl font-bold text-gray-700 mb-4">Welcome, Student!</h2>
+  <!-- Sidebar -->
+  <aside class="w-64 bg-purple-600 text-white flex flex-col justify-between p-6 shadow-2xl">
+    <div>
+      <h1 class="text-2xl font-extrabold mb-8 text-center">🎓 Student Panel</h1>
+      <p class="text-sm text-center mb-4 text-purple-100">Click below to navigate</p>
 
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-      <div class="bg-white p-5 rounded-2xl shadow">
-        <h3 class="font-bold text-lg mb-2">Personal Details</h3>
-        <p>Fill or update your info.</p>
-        <button onclick="window.location.href='studentdetails.html'"class="mt-3 bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600">Edit</button>
-         <button onclick="window.location.href='data.html'" class="mt-3 bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600">View</button>
-
-      </div>
-
-      <div class="bg-white p-5 rounded-2xl shadow">
-        <h3 class="font-bold text-lg mb-2">Room & Booking</h3>
-        <p>View your room, or request change.</p>
-        <button onclick="window.location.href='studentbooking.html'" class="mt-3 bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600">Book Room</button>
-
-      </div>
-
-      <div class="bg-white p-5 rounded-2xl shadow">
-        <h3 class="font-bold text-lg mb-2">Fee Payments</h3>
-        <p>View dues, pay securely online.</p>
-        <button onclick="window.location.href='studentpay.html'" class="mt-3 bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600">Pay Fees</button>
-
-      </div>
+      <nav class="space-y-3">
+        <button onclick="loadPage('studentdetails.html')" class="w-full text-left px-4 py-2 rounded-xl bg-white text-purple-700 font-semibold hover:bg-purple-200 transition">📝 Add Details</button>
+        <button onclick="loadPage('data.html')" class="w-full text-left px-4 py-2 rounded-xl bg-white text-purple-700 font-semibold hover:bg-purple-200 transition">📋 View Details</button>
+        <button onclick="loadPage('studentbooking.html')" class="w-full text-left px-4 py-2 rounded-xl bg-white text-purple-700 font-semibold hover:bg-purple-200 transition">🏠 Room Booking</button>
+        <button onclick="loadPage('studentpay.html')" class="w-full text-left px-4 py-2 rounded-xl bg-white text-purple-700 font-semibold hover:bg-purple-200 transition">💳 Fee Payment</button>
+      </nav>
     </div>
+
+    <button onclick="logout()" class="mt-8 bg-white text-purple-700 px-4 py-2 rounded-xl font-semibold hover:bg-purple-200 transition">🚪 Logout</button>
+  </aside>
+
+  <!-- Main Content -->
+  <main class="flex-1 flex flex-col bg-gray-50">
+
+    <!-- Header -->
+    <header class="bg-purple-100 p-6 flex justify-between items-center">
+      <h2 id="welcome" class="text-2xl font-bold text-gray-800">👋 Welcome!</h2>
+    </header>
+
+    <!-- Page Content -->
+    <section class="flex-1 relative">
+      <!-- Instruction -->
+      <div id="instruction" class="absolute inset-0 flex flex-col items-center justify-center text-gray-700">
+        <h3 class="text-2xl font-semibold mb-2">Welcome to your Student Dashboard</h3>
+        <p class="text-base">👉 Click <strong>“Add Details”</strong> to fill and save your information.</p>
+        <p class="text-base mt-1">👉 Then click <strong>“View Details”</strong> to check your saved information.</p>
+        <p class="text-base mt-1">👉 Use <strong>“Room Booking”</strong> and <strong>“Fee Payment”</strong> to manage your stay and fees.</p>
+      </div>
+
+      <!-- Iframe -->
+      <iframe id="contentFrame" src="" class="hidden w-full h-full border-none"></iframe>
+    </section>
   </main>
+
+  <script>
+    // Validate login
+    const user = JSON.parse(localStorage.getItem("user"));
+    if (!user || user.role !== "student") {
+      alert("⚠️ Please log in as a student first!");
+      window.location.href = "/login.html";
+    } else {
+      getStudentName(user.user_id);
+    }
+
+    // Fetch and show student name
+    async function getStudentName(userId) {
+      try {
+        const res = await fetch(`http://localhost:5000/student/${userId}`);
+        const data = await res.json();
+
+        if (res.ok && data.student_name) {
+          document.getElementById("welcome").innerText = `👋 Welcome, ${data.student_name}`;
+        } else {
+          document.getElementById("welcome").innerText = "👋 Welcome, Student";
+        }
+      } catch (err) {
+        console.error("Error fetching student name:", err);
+        document.getElementById("welcome").innerText = "👋 Welcome, Student";
+      }
+    }
+
+    // Load selected page in iframe
+    function loadPage(page) {
+      document.getElementById("instruction").classList.add("hidden");
+      const frame = document.getElementById("contentFrame");
+      frame.src = page;
+      frame.classList.remove("hidden");
+    }
+
+    // Logout
+    function logout() {
+      localStorage.removeItem("user");
+      window.location.href = "/login.html";
+    }
+  </script>
 </body>
 </html>

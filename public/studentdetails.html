@@ -6,9 +6,11 @@
   <title>Student Details</title>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-gray-100 min-h-screen flex flex-col items-center py-10">
+<body class="bg-[#F7F8FA] min-h-screen flex flex-col items-center py-10">
   <div class="bg-white shadow-lg rounded-2xl p-8 w-full max-w-3xl">
-    <h1 class="text-2xl font-semibold text-center text-indigo-600 mb-6">Student Details</h1>
+    <h1 class="text-2xl font-semibold text-center text-indigo-600 mb-6">
+      Student Details
+    </h1>
 
     <form id="studentForm" class="space-y-4">
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -46,59 +48,77 @@
         <div><label>Guardian Phone</label><input id="guardian_phone" class="border rounded-lg p-2 w-full" /></div>
       </div>
 
-      <div>
-        <label>Hostel Name</label>
-        <input id="hostel_name" readonly class="border rounded-lg p-2 w-full bg-gray-100 text-gray-700" />
-      </div>
-
-      <button type="submit" class="bg-indigo-600 text-white px-6 py-2 rounded-lg hover:bg-indigo-700 transition w-full">
+      <button type="submit" class="bg-indigo-600 text-white px-6 py-2 rounded-lg hover:bg-indigo-700 transition w-50">
         Save Details
       </button>
       <p id="message" class="text-center mt-4 text-sm"></p>
     </form>
   </div>
 
-  <script>
-    document.getElementById("studentForm").addEventListener("submit", async (e) => {
-  e.preventDefault();
-  
-  const user_id = localStorage.getItem("user_id"); // same as student_id
-  console.log("🟢 Logged in user_id:", user_id);
+<script>
+  const user = JSON.parse(localStorage.getItem("user"));
+  console.log("👤 Logged-in user:", user);
 
-  const formData = {
-    user_id,
-    roll_no: document.getElementById("roll_no").value,
-    f_name: document.getElementById("f_name").value,
-    m_name: document.getElementById("m_name").value,
-    l_name: document.getElementById("l_name").value,
-    department: document.getElementById("department").value,
-    course_year: document.getElementById("course_year").value,
-    student_phone: document.getElementById("student_phone").value,
-    student_email_Id: document.getElementById("student_email_Id").value,
-    dob: document.getElementById("dob").value,
-    gender: document.getElementById("gender").value,
-    age: document.getElementById("age").value,
-    guardian_name: document.getElementById("guardian_name").value,
-    guardian_phone: document.getElementById("guardian_phone").value,
-  };
-
-  try {
-    const res = await fetch("/saveStudentDetails", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(formData),
-    });
-
-    const data = await res.json();
-    console.log("Server response:", data);
-
-    alert(data.message);
-  } catch (error) {
-    console.error("Error:", error);
-    alert("Error saving student details");
+  if (!user || user.role !== "student") {
+    alert("⚠️ Please log in as a student!");
+    window.location.href = "/login.html";
+  } else {
+    loadStudentDetails(user.user_id);
   }
-});
 
-  </script>
+  async function loadStudentDetails(userId) {
+    try {
+      console.log("🔍 Loading details for:", userId);
+      const res = await fetch(`http://localhost:5000/student/${userId}`);
+      const data = await res.json();
+      console.log("📦 Data received:", data);
+
+      if (res.ok && data) {
+        for (const key in data) {
+          const input = document.getElementById(key);
+          if (input) input.value = data[key] || "";
+        }
+      } else {
+        console.log("ℹ️ No details found for this student.");
+      }
+    } catch (err) {
+      console.error("❌ Error loading student data:", err);
+    }
+  }
+
+  document.getElementById("studentForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    const formData = {
+      user_id: user.user_id,
+      roll_no: roll_no.value,
+      f_name: f_name.value,
+      m_name: m_name.value,
+      l_name: l_name.value,
+      department: department.value,
+      course_year: course_year.value,
+      student_phone: student_phone.value,
+      student_email_Id: student_email_Id.value,
+      dob: dob.value,
+      gender: gender.value,
+      age: age.value,
+      guardian_name: guardian_name.value,
+      guardian_phone: guardian_phone.value,
+    };
+
+    try {
+      const res = await fetch("http://localhost:5000/saveStudentDetails", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData),
+      });
+      const result = await res.json();
+      alert(result.message);
+    } catch (err) {
+      console.error("Error saving details:", err);
+    }
+  });
+</script>
+
 </body>
 </html>

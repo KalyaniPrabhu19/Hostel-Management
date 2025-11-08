@@ -241,4 +241,339 @@ app.get('/admin/students', (req, res) => {
     res.json(results);
   });
 });
+  <script>
+    document.getElementById("studentForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  
+  const user_id = localStorage.getItem("user_id"); // same as student_id
+  console.log("🟢 Logged in user_id:", user_id);
+
+  const formData = {
+    user_id,
+    roll_no: document.getElementById("roll_no").value,
+    f_name: document.getElementById("f_name").value,
+    m_name: document.getElementById("m_name").value,
+    l_name: document.getElementById("l_name").value,
+    department: document.getElementById("department").value,
+    course_year: document.getElementById("course_year").value,
+    student_phone: document.getElementById("student_phone").value,
+    student_email_Id: document.getElementById("student_email_Id").value,
+    dob: document.getElementById("dob").value,
+    gender: document.getElementById("gender").value,
+    age: document.getElementById("age").value,
+    guardian_name: document.getElementById("guardian_name").value,
+    guardian_phone: document.getElementById("guardian_phone").value,
+  };
+
+  try {
+    const res = await fetch("/saveStudentDetails", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(formData),
+    });
+
+    const data = await res.json();
+    console.log("Server response:", data);
+
+    alert(data.message);
+  } catch (error) {
+    console.error("Error:", error);
+    alert("Error saving student details");
+  }
+});
+
+  </script>
+
+<script>
+  const user = JSON.parse(localStorage.getItem("user"));
+  if (!user || user.role !== "student") {
+    alert("⚠️ Please log in as a student!");
+    window.location.href = "/login.html";
+  } else {
+    loadStudentDetails(user.user_id);
+  }
+
+  async function loadStudentDetails(userId) {
+    try {
+      const res = await fetch(`http://localhost:5000/student/${userId}`);
+      const data = await res.json();
+
+      if (res.ok) {
+        // Fill form fields
+        document.getElementById("f_name").value = data.f_name || "";
+        document.getElementById("m_name").value = data.m_name || "";
+        document.getElementById("l_name").value = data.l_name || "";
+        document.getElementById("roll_no").value = data.roll_no || "";
+        document.getElementById("department").value = data.department || "";
+        document.getElementById("course_year").value = data.course_year || "";
+        document.getElementById("student_phone").value = data.student_phone || "";
+        document.getElementById("student_email_Id").value = data.student_email_Id || "";
+        document.getElementById("dob").value = data.dob || "";
+        document.getElementById("gender").value = data.gender || "";
+        document.getElementById("age").value = data.age || "";
+        document.getElementById("guardian_name").value = data.guardian_name || "";
+        document.getElementById("guardian_phone").value = data.guardian_phone || "";
+      } else {
+        console.log("ℹ️ No existing data found, form stays empty.");
+      }
+    } catch (err) {
+      console.error("Error loading student data:", err);
+    }
+  }
+
+  async function saveStudentDetails() {
+    const formData = {
+      user_id: user.user_id,
+      roll_no: document.getElementById("roll_no").value,
+      f_name: document.getElementById("f_name").value,
+      m_name: document.getElementById("m_name").value,
+      l_name: document.getElementById("l_name").value,
+      department: document.getElementById("department").value,
+      course_year: document.getElementById("course_year").value,
+      student_phone: document.getElementById("student_phone").value,
+      student_email_Id: document.getElementById("student_email_Id").value,
+      dob: document.getElementById("dob").value,
+      gender: document.getElementById("gender").value,
+      age: document.getElementById("age").value,
+      guardian_name: document.getElementById("guardian_name").value,
+      guardian_phone: document.getElementById("guardian_phone").value,
+    };
+
+    try {
+      const res = await fetch("http://localhost:5000/saveStudentDetails", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData),
+      });
+
+      const result = await res.json();
+      alert(result.message);
+    } catch (err) {
+      console.error("Error saving details:", err);
+      alert("Error saving details.");
+    }
+  }
+</script>
+
+
+app.post("/saveStudentDetails", (req, res) => {
+  const {
+    roll_no,
+    f_name,
+    m_name,
+    l_name,
+    department,
+    course_year,
+    student_phone,
+    student_email_Id,
+    dob,
+    gender,
+    age,
+    guardian_name,
+    guardian_phone,
+  } = req.body;
+
+  const student_id = req.body.user_id; // coming from frontend (logged in user)
+
+  console.log("🟢 Trying to save student for user_id:", student_id);
+
+  // check if user exists
+  connection.query(
+    "SELECT * FROM users WHERE user_id = ?",
+    [student_id],
+    (err, userResults) => {
+      if (err) {
+        console.error("❌ Error checking user:", err);
+        return res.status(500).json({ message: "Database error while checking user" });
+      }
+
+      if (userResults.length === 0) {
+        console.warn("⚠️ No user found with ID:", student_id);
+        return res.status(400).json({ message: "User not found in users table" });
+      }
+
+      console.log("✅ User exists. Proceeding to insert student...");
+
+      const query = `
+        INSERT INTO students (
+          student_id, roll_no, f_name, m_name, l_name, department, course_year,
+          student_phone, student_email_Id, dob, gender, age, guardian_name, guardian_phone
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ON DUPLICATE KEY UPDATE
+          roll_no = VALUES(roll_no),
+          f_name = VALUES(f_name),
+          m_name = VALUES(m_name),
+          l_name = VALUES(l_name),
+          department = VALUES(department),
+          course_year = VALUES(course_year),
+          student_phone = VALUES(student_phone),
+          student_email_Id = VALUES(student_email_Id),
+          dob = VALUES(dob),
+          gender = VALUES(gender),
+          age = VALUES(age),
+          guardian_name = VALUES(guardian_name),
+          guardian_phone = VALUES(guardian_phone);
+      `;
+
+      connection.query(
+        query,
+        [
+          student_id,
+          roll_no,
+          f_name,
+          m_name,
+          l_name,
+          department,
+          course_year,
+          student_phone,
+          student_email_Id,
+          dob,
+          gender,
+          age,
+          guardian_name,
+          guardian_phone,
+        ],
+        (err, results) => {
+          if (err) {
+            console.error("❌ Error inserting student:", err);
+            return res.status(500).json({ message: "Error saving student details", error: err.message });
+          }
+          console.log("✅ Student details saved successfully!");
+          res.status(200).json({ message: "Student details saved successfully" });
+        }
+      );
+    }
+  );
+});
+app.get("/student/:user_id", async (req, res) => {
+  const { user_id } = req.params;
+  try {
+    const [rows] = await connection.query(
+      `
+      SELECT 
+        s.roll_no, s.f_name, s.m_name, s.l_name, 
+        s.department, s.course_year, s.student_phone, 
+        s.student_email_Id, s.dob, s.gender, s.age,
+        s.guardian_name, s.guardian_phone
+      FROM students s
+      INNER JOIN users u ON s.student_id = u.user_id
+      WHERE u.user_id = ?
+      `,
+      [user_id]
+    );
+
+    if (rows.length === 0) {
+      return res.status(404).json({ message: "Student not found" });
+    }
+
+    res.json(rows[0]); // send all student details
+  } catch (error) {
+    console.error("Error fetching student details:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Hostels</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body class="bg-gradient-to-br from-blue-100 via-green-100 to-blue-200 min-h-screen flex flex-col items-center py-10">
+
+  <!-- Header -->
+  <h1 class="text-4xl font-extrabold mb-10 text-blue-800 drop-shadow-md">
+    🏠 Your Managed Hostels
+  </h1>
+
+  <!-- Hostel Cards Container -->
+  <div id="hostelList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 w-11/12 max-w-7xl">
+    <!-- Cards will appear here -->
+  </div>
+
+  <script>
+    // ✅ Get current logged-in admin
+    const loggedUser = JSON.parse(localStorage.getItem("user"));
+
+    if (!loggedUser || loggedUser.role !== "admin") {
+      document.body.innerHTML = `
+        <div class="text-center mt-20">
+          <p class="text-red-600 text-2xl font-semibold">⚠️ You must log in as an admin to view this page.</p>
+        </div>`;
+    } else {
+      loadHostels(loggedUser.user_id);
+    }
+
+    // ✅ Fetch and display hostels
+    async function loadHostels(userId) {
+      try {
+        const res = await fetch(`http://localhost:5000/admin/hostels/${userId}`);
+        if (!res.ok) throw new Error("Failed to fetch hostels");
+
+        const hostels = await res.json();
+        const container = document.getElementById("hostelList");
+        container.innerHTML = "";
+
+        if (hostels.length === 0) {
+          container.innerHTML = `
+            <p class="text-gray-700 text-lg text-center col-span-full bg-white/60 p-5 rounded-xl shadow">
+              No hostels found for this admin.
+            </p>`;
+          return;
+        }
+
+        hostels.forEach(h => {
+          const card = document.createElement("div");
+          card.className = `
+            bg-white/70 backdrop-blur-md border border-blue-200 
+            p-6 rounded-2xl shadow-md hover:shadow-2xl 
+            hover:-translate-y-1 transition-all duration-300 cursor-pointer
+          `;
+          card.innerHTML = `
+            <div class="flex items-center justify-between mb-3">
+              <h2 class="text-2xl font-semibold text-blue-700">${h.hostel_name}</h2>
+              <span class="text-sm text-gray-500 bg-blue-100 px-3 py-1 rounded-full">
+                ID: ${h.hostel_id}
+              </span>
+            </div>
+
+            <div class="space-y-2 text-gray-700">
+              <p>📍 <strong>Address:</strong> ${h.address}</p>
+              <p>🛏️ <strong>Total Rooms:</strong> ${h.total_rooms}</p>
+              
+            </div>
+
+            <button class="mt-5 w-full bg-blue-500 text-white py-2 rounded-xl hover:bg-blue-600 transition-all">
+              Manage Hostel
+            </button>
+          `;
+          container.appendChild(card);
+        });
+
+      } catch (err) {
+        console.error(err);
+        document.getElementById("hostelList").innerHTML = `
+          <p class="text-red-600 text-lg col-span-full bg-white/70 p-4 rounded-xl shadow">
+            ⚠️ Error loading hostels: ${err.message}
+          </p>`;
+      }
+    }
+  </script>
+</body>
+</html>
+app.post("/admin/book-room", async (req, res) => {
+  const { room_id, student_id } = req.body;
+
+  try {
+    await connection.query("UPDATE students SET room_id= ? WHERE student_id= ?", [room_id, student_id]);
+    res.json({ message: "Room booked successfully" });
+  } catch (error) {
+    console.error("🔥 Booking error:", error);
+    res.status(500).json({ message: "Error booking room" });
+  }
+});
+
 

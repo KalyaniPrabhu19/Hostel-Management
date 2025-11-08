@@ -3,15 +3,15 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Register</title>
+  <title>Sign-up</title>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-gray-100 flex justify-center items-center h-screen">
 
   <div class="bg-white p-8 rounded-xl shadow-lg w-full max-w-md">
-    <h2 class="text-2xl font-semibold text-center text-indigo-600 mb-6">Register</h2>
+    <h2 class="text-2xl font-semibold text-center text-indigo-600 mb-6">Sign-up</h2>
 
-    <form id="registerForm" class="space-y-4">
+    <form id="sign-upForm" class="space-y-4">
       <div>
         <label class="block text-gray-700 mb-1">User ID</label>
         <input id="user_id" type="text" class="w-full border border-gray-300 rounded-lg p-2" required>
@@ -37,7 +37,7 @@
       </div>
 
       <button type="submit" class="w-full bg-indigo-600 text-white py-2 rounded-lg hover:bg-indigo-700 transition">
-        Register
+        Sign-up
       </button>
       <p class="text-center text-sm text-gray-600 mt-4">
   Already have an account? 
@@ -50,7 +50,7 @@
   </div>
 
   <script>
-    document.getElementById("registerForm").addEventListener("submit", async (e) => {
+    document.getElementById("sign-upForm").addEventListener("submit", async (e) => {
       e.preventDefault();
 
       const user_id = document.getElementById("user_id").value;
@@ -58,7 +58,7 @@
       const role = document.querySelector('input[name="role"]:checked').value;
 
       try {
-        const res = await fetch("/register", {
+        const res = await fetch("/sign-up", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ user_id, password, role })

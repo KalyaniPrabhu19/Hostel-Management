@@ -1,45 +1,162 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Admin Dashboard</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Hostels</title>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-gray-100">
-  <nav class="bg-purple-600 p-4 text-white flex justify-between">
-    <h1 class="font-bold text-2xl">🏫 Admin Panel</h1>
-    <a href="/" class="bg-white text-purple-600 px-3 py-1 rounded-md font-semibold hover:bg-purple-100">Logout</a>
-  </nav>
 
-  <main class="p-6">
-    <h2 class="text-2xl font-bold text-gray-700 mb-4">Welcome, Admin!</h2>
+<body class="bg-gradient-to-br from-purple-50 via-pink-50 to-indigo-100 flex min-h-screen font-sans">
 
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-      <div class="bg-white p-5 rounded-2xl shadow">
-        <h3 class="font-bold text-lg mb-2">Manage Hostels</h3>
-        <button onclick="window.location.href='manage.html'" class="mt-3 bg-purple-500 text-white px-4 py-2 rounded-md hover:bg-purple-700">View Hostels</button>
-      </div>
+  <!-- Sidebar -->
+  <aside class="w-64 bg-gradient-to-b from-purple-500 to-indigo-500 text-white flex flex-col shadow-xl">
+    <div class="p-5 border-b border-purple-300/40">
+      <h1 class="text-2xl font-bold tracking-wide">🏫 Admin Panel</h1>
+    </div>
 
-      <div class="bg-white p-5 rounded-2xl shadow">
-        <h3 class="font-bold text-lg mb-2">Rooms</h3>
-        <button  onclick="window.location.href='manage2.html'"class="mt-3 bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-700">Manage Rooms</button>
-      </div>
+    <nav class="flex-1 p-5 space-y-4">
+         <a href="adminreg.html" 
+        class="sidebar-link block px-4 py-2 rounded-xl font-semibold transition">
+        📝 Register Students
+      </a>
+      <a href="adminbook.html" 
+        class="sidebar-link block px-4 py-2 rounded-xl font-semibold transition">
+        🏠 Book a room
+      </a>
+      <a href="manage2.html" 
+        class="sidebar-link block px-4 py-2 rounded-xl font-semibold transition">
+        🛏️ Manage Rooms
+      </a>
+      <a href="viewstudent.html" 
+        class="sidebar-link block px-4 py-2 rounded-xl font-semibold transition">
+        👩 View Students
+      </a>
+    </nav>
 
-      <div class="bg-white p-5 rounded-2xl shadow">
-        <h3 class="font-bold text-lg mb-2">Students & Payments</h3>
-        <button onclick="window.location.href='viewstudent.html'"  class="mt-3 bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-700">View Students</button>
+    <div class="p-4 border-t border-purple-300/40">
+      <button onclick="logout()" 
+        class="w-full bg-white text-purple-700 px-3 py-2 rounded-lg font-semibold hover:bg-purple-100 transition">
+        Logout
+      </button>
+    </div>
+  </aside>
+
+  <!-- Main Content -->
+  <main class="flex-1 p-8 overflow-y-auto">
+    <div class="bg-white/80 backdrop-blur-md rounded-2xl shadow-md p-8 border border-gray-200">
+      <h2 id="welcome" class="text-3xl font-bold text-purple-700 mb-3">👋 Welcome, Admin!</h2>
+      <p class="text-gray-600 mb-6">Below are the hostels you manage.</p>
+
+      <!-- Hostel Cards Container -->
+      <div id="hostelList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <!-- Cards will appear here -->
       </div>
     </div>
   </main>
-</body><script>
-const user = JSON.parse(localStorage.getItem("user"));
-if (!user || user.role !== "admin") {
-  alert("⚠️ You must log in as an admin to view this page.");
-  window.location.href = "/login.html";
-} else {
-  console.log("Logged in as:", user.user_id);
-  loadHostels(user.user_id);
-}
-</script>
+
+  <script>
+    // ✅ Check if admin is logged in
+    const user = JSON.parse(localStorage.getItem("user"));
+    if (!user || user.role !== "admin") {
+      alert("⚠️ You must log in as an admin to view this page.");
+      window.location.href = "/login.html";
+    } else {
+      getAdminName(user.user_id);
+      loadHostels(user.user_id);
+    }
+
+    // ✅ Fetch and show admin name
+    async function getAdminName(userId) {
+      try {
+        const response = await fetch(`http://localhost:5000/admin/${userId}`);
+        if (!response.ok) throw new Error("Failed to fetch admin name");
+        const data = await response.json();
+        document.getElementById("welcome").innerText = `👋 Welcome, ${data.admin_name || "Admin"}!`;
+      } catch (err) {
+        console.error("Error fetching admin name:", err);
+        document.getElementById("welcome").innerText = "👋 Welcome, Admin!";
+      }
+    }
+
+    // ✅ Load hostels automatically
+    async function loadHostels(adminId) {
+      try {
+        const res = await fetch(`http://localhost:5000/admin/hostels/${adminId}`);
+        if (!res.ok) throw new Error("Failed to fetch hostels");
+
+        const hostels = await res.json();
+        const container = document.getElementById("hostelList");
+        container.innerHTML = "";
+
+        if (hostels.length === 0) {
+          container.innerHTML = `
+            <p class="text-gray-700 text-lg text-center col-span-full bg-white/60 p-5 rounded-xl shadow">
+              No hostels found for this admin.
+            </p>`;
+          return;
+        }
+
+        hostels.forEach(h => {
+          const card = document.createElement("div");
+          card.className = `
+            bg-white/80 backdrop-blur-md border border-purple-200 
+            p-6 rounded-2xl shadow-md hover:shadow-2xl 
+            hover:-translate-y-1 transition-all duration-300 cursor-pointer
+          `;
+          card.innerHTML = `
+            <div class="flex items-center justify-between mb-3">
+              <h2 class="text-2xl font-semibold text-purple-700">${h.hostel_name}</h2>
+              <span class="text-sm text-gray-600 bg-purple-100 px-3 py-1 rounded-full">
+                ID: ${h.hostel_id}
+              </span>
+            </div>
+
+            <div class="space-y-2 text-gray-700">
+              <p>📍 <strong>Address:</strong> ${h.address}</p>
+              <p>🛏️ <strong>Total Rooms:</strong> ${h.total_rooms}</p>
+            </div>
+
+            <button onclick="viewHostel('${h.hostel_id}')"
+              class="mt-5 w-full bg-purple-600 text-white py-2 rounded-xl hover:bg-purple-800 transition-all">
+              Manage Hostel
+            </button>
+          `;
+          container.appendChild(card);
+        });
+
+      } catch (err) {
+        console.error("Error:", err);
+        document.getElementById("hostelList").innerHTML = `
+          <p class="text-red-600 text-lg col-span-full bg-white/70 p-4 rounded-xl shadow">
+            ⚠️ Error loading hostels: ${err.message}
+          </p>`;
+      }
+    }
+
+    // ✅ Redirect to manage rooms page for a specific hostel
+    function viewHostel(hostelId) {
+      localStorage.setItem("selected_hostel", hostelId);
+      window.location.href = "manage2.html";
+    }
+
+    // ✅ Logout
+    function logout() {
+      localStorage.removeItem("user");
+      window.location.href = "/login.html";
+    }
+
+    // ✅ Sidebar active highlight
+    const currentPage = window.location.pathname.split("/").pop();
+    const links = document.querySelectorAll(".sidebar-link");
+    links.forEach(link => {
+      const href = link.getAttribute("href");
+      if (href === currentPage) {
+        link.classList.add("bg-white/20", "text-white", "shadow-lg");
+      } else {
+        link.classList.add("bg-white/10", "hover:bg-white/20");
+      }
+    });
+  </script>
+</body>
 </html>

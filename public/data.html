@@ -6,7 +6,7 @@
   <title>Student Details</title>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-gray-100 flex justify-center items-center min-h-screen">
+<body class="bg-[#F7F8FA] flex justify-center items-center min-h-screen">
 
   <div class="bg-white shadow-lg rounded-2xl p-6 w-full max-w-3xl">
     <h1 class="text-2xl font-bold mb-4 text-center text-blue-700">Student Details</h1>
@@ -27,12 +27,6 @@
       <p><strong>Room ID:</strong> <span id="room_id"></span></p>
       <p><strong>Room Type:</strong> <span id="room_type"></span></p>
     </div>
-
-    <div class="mt-6 text-center">
-      <button id="logoutBtn" class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition">
-        Logout
-      </button>
-    </div>
   </div>
 
   <script>
@@ -44,12 +38,11 @@
         return;
       }
 
-        try {
-  const res = await fetch(`/api/student?user_id=${user_id}`);
-  console.log("Response status:", res.status);
-  const data = await res.json();
-  console.log("Response data:", data);
-
+      try {
+        const res = await fetch(`/api/student?user_id=${user_id}`);
+        console.log("Response status:", res.status);
+        const data = await res.json();
+        console.log("Response data:", data);
 
         if (res.ok && !data.error) {
           document.getElementById("student_id").textContent = data.student_id || "N/A";
@@ -77,11 +70,6 @@
           "<p class='text-center text-red-500'>Error loading data.</p>";
       }
     }
-
-    document.getElementById("logoutBtn").addEventListener("click", () => {
-      localStorage.removeItem("user_id");
-      window.location.href = "login.html";
-    });
 
     // Load data on page open
     fetchStudent();
