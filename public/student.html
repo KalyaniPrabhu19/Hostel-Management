@@ -37,7 +37,7 @@
     <section class="flex-1 relative">
       <!-- Instruction -->
       <div id="instruction" class="absolute inset-0 flex flex-col items-center justify-center text-gray-700">
-        <h3 class="text-2xl font-semibold mb-2">Welcome to your Student Dashboard</h3>
+        <h3 class="text-2xl font-semibold mb-2">Welcome to Student Dashboard</h3>
         <p class="text-base">👉 Click <strong>“Add Details”</strong> to fill and save your information.</p>
         <p class="text-base mt-1">👉 Then click <strong>“View Details”</strong> to check your saved information.</p>
         <p class="text-base mt-1">👉 Use <strong>“Room Booking”</strong> and <strong>“Fee Payment”</strong> to manage your stay and fees.</p>
@@ -45,6 +45,26 @@
 
       <!-- Iframe -->
       <iframe id="contentFrame" src="" class="hidden w-full h-full border-none"></iframe>
+
+      <!-- ✅ Contact Admin Card -->
+      <div class="absolute bottom-6 right-6">
+        <div onclick="fetchAdminDetails()" class="cursor-pointer bg-white shadow-xl border border-purple-200 p-4 rounded-2xl hover:bg-purple-50 transition">
+          <h3 class="text-lg font-semibold text-purple-700 flex items-center gap-2">📞 Contact Admin</h3>
+          <p class="text-sm text-gray-600">Click to view your hostel admin</p>
+        </div>
+      </div>
+
+      <!-- Popup Modal -->
+      <div id="adminModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
+        <div class="bg-white rounded-2xl shadow-2xl p-6 w-96 relative">
+          <button onclick="closeModal()" class="absolute top-2 right-3 text-gray-400 hover:text-gray-700 text-xl">&times;</button>
+          <h2 class="text-xl font-bold text-purple-700 mb-3">🏢 Admin Details</h2>
+          <div id="adminInfo" class="text-gray-700 space-y-1">
+            <p>Loading...</p>
+          </div>
+        </div>
+      </div>
+
     </section>
   </main>
 
@@ -63,15 +83,11 @@
       try {
         const res = await fetch(`http://localhost:5000/student/${userId}`);
         const data = await res.json();
-
         if (res.ok && data.student_name) {
           document.getElementById("welcome").innerText = `👋 Welcome, ${data.student_name}`;
-        } else {
-          document.getElementById("welcome").innerText = "👋 Welcome, Student";
         }
       } catch (err) {
         console.error("Error fetching student name:", err);
-        document.getElementById("welcome").innerText = "👋 Welcome, Student";
       }
     }
 
@@ -88,6 +104,48 @@
       localStorage.removeItem("user");
       window.location.href = "/login.html";
     }
+
+    // ✅ Fetch admin details (joining student → hostel → admin)
+    async function fetchAdminDetails() {
+  const userId = user?.user_id;
+  console.log("Fetching admin for userId:", userId);
+
+  if (!userId) {
+    alert("User ID not found. Please log in again.");
+    return;
+  }
+
+  try {
+    const res = await fetch(`http://localhost:5000/student/${userId}/admin`);
+    console.log("Response status:", res.status);
+
+    const data = await res.json();
+    console.log("Admin details received:", data);
+
+    const infoDiv = document.getElementById("adminInfo");
+    if (res.ok && data.admin_name) {
+      infoDiv.innerHTML = `
+        <p><strong>👤 Name:</strong> ${data.admin_name}</p>
+        <p><strong>📧 Email:</strong> ${data.admin_email}</p>
+        <p><strong>📞 Phone:</strong> ${data.admin_phone}</p>
+        <p><strong>🏠 Hostel:</strong> ${data.hostel_name}</p>
+      `;
+    } else {
+      infoDiv.innerHTML = `<p class="text-red-600">${data.message || "No admin details found."}</p>`;
+    }
+
+    document.getElementById("adminModal").classList.remove("hidden");
+  } catch (err) {
+    console.error("🔥 Fetch error:", err);
+    document.getElementById("adminInfo").innerHTML = `<p class="text-red-600">Error fetching details.</p>`;
+    document.getElementById("adminModal").classList.remove("hidden");
+  }
+}
+function closeModal() {
+  const modal = document.getElementById("adminModal");
+  modal.classList.add("hidden"); // hide it again
+}
+
   </script>
 </body>
 </html>

@@ -607,25 +607,43 @@ app.get("/admin/data/:admin_id", (req, res) => {
 
 app.post("/admin/register-student", async (req, res) => {
   const {
-    student_id, roll_no, f_name, m_name, l_name, department, course_year,
+    user_id, password, // user table fields
+    roll_no, f_name, m_name, l_name, department, course_year,
     student_phone, student_email_Id, dob, gender, age,
     guardian_name, guardian_phone
   } = req.body;
+try {
+    // ✅ 1️⃣ Hash the password before inserting
+    const hashedPassword = await hash(password, 10); // saltRounds = 10
 
-  try {
+    // ✅ 2️⃣ Insert into users table first
     await connection.query(
-      `INSERT INTO students (student_id, roll_no, f_name, m_name, l_name, department, course_year,
-        student_phone, student_email_Id, dob, gender, age, guardian_name, guardian_phone)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [student_id, roll_no, f_name, m_name, l_name, department, course_year,
-       student_phone, student_email_Id, dob, gender, age, guardian_name, guardian_phone ]
+      `INSERT INTO users (user_id, password, role) VALUES (?, ?, ?)`,
+      [user_id, hashedPassword, "student"]
     );
-    res.json({ message: "Student registered successfully" });
+
+
+    // 2️⃣ Insert into students table (student_id = user_id)
+    await connection.query(
+      `INSERT INTO students (
+        student_id, roll_no, f_name, m_name, l_name, department, course_year,
+        student_phone, student_email_Id, dob, gender, age, guardian_name, guardian_phone
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        user_id, roll_no, f_name, m_name, l_name, department, course_year,
+        student_phone, student_email_Id, dob, gender, age, guardian_name, guardian_phone
+      ]
+    );
+
+    res.json({ message: "Student registered successfully", student_id: user_id });
   } catch (err) {
-    console.error("Error registering student:", err);
-    res.status(500).json({ message: "Server error" });
+    console.error("❌ Error registering student:", err);
+    res.status(500).json({ message: "Server error", error: err.message });
   }
 });
+
+
+
 
 // Get all rooms (for admin)
 app.get("/admin/rooms", (req, res) => {
@@ -762,6 +780,35 @@ app.post('/admin/book-room', (req, res) => {
         });
       });
     });
+  });
+});
+
+app.get("/student/:user_id/admin", (req, res) => {
+  const userId = req.params.user_id;
+
+  const query = `
+    SELECT 
+      a.admin_name, 
+      a.admin_email, 
+      a.admin_phone, 
+      h.hostel_name
+    FROM students s
+    JOIN hostels h ON s.hostel_id = h.hostel_id
+    JOIN admins a ON h.admin_id = a.admin_id
+    WHERE s.student_id = ?;
+  `;
+
+  connection.query(query, [userId], (err, result) => {
+    if (err) {
+      console.error("Error fetching admin details:", err);
+      return res.status(500).json({ message: "Error fetching admin details", error: err });
+    }
+
+    if (result.length === 0) {
+      return res.status(404).json({ message: "No admin found for this student" });
+    }
+
+    res.json(result[0]);
   });
 });
 
