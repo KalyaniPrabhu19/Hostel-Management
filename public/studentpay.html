@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Student Payment</title>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
@@ -20,10 +20,17 @@
 
       <label class="block mb-2 font-medium">Payment Method:</label>
       <select id="payment_method" class="border rounded-lg px-3 py-2 w-full">
-        <option value="online">Online</option>
+        <option value="online">Online (UPI)</option>
         <option value="card">Card</option>
         <option value="cash">Cash</option>
       </select>
+
+      <!-- Hidden initially, shown only if online -->
+      <div id="upiSection" class="hidden mt-4">
+        <label class="block mb-2 font-medium">Enter UPI ID:</label>
+        <input id="upi_id" type="text" placeholder="example@upi"
+               class="border rounded-lg px-3 py-2 w-full" />
+      </div>
 
       <label class="block mt-4 mb-2 font-medium">Remarks (optional):</label>
       <input id="remarks" type="text" placeholder="Any notes..."
@@ -37,8 +44,9 @@
   </div>
 
   <script>
-    const user_id = localStorage.getItem("user_id") || "UV25"; // for demo use
+    const user_id = localStorage.getItem("user_id") || "UV25"; // demo fallback
 
+    // Load existing payment details
     async function loadFeePayments() {
       const container = document.getElementById("paymentDetails");
       try {
@@ -58,12 +66,21 @@
             <p><strong>Amount:</strong> ₹${payment.amount}</p>
             <p><strong>Due Date:</strong> ${new Date(payment.due_date).toLocaleDateString()}</p>
             <p><strong>Status:</strong> 
-              <span class="${payment.status === 'paid' ? 'text-green-600' :
-                          payment.status === 'overdue' ? 'text-red-600' : 'text-yellow-600'} font-semibold">
+              <span class="${
+                payment.status === 'paid'
+                  ? 'text-green-600'
+                  : payment.status === 'overdue'
+                  ? 'text-red-600'
+                  : 'text-yellow-600'
+              } font-semibold">
                 ${payment.status}
               </span>
             </p>
-            <p><strong>Payment Date:</strong> ${payment.payment_date ? new Date(payment.payment_date).toLocaleString() : "—"}</p>
+            <p><strong>Payment Date:</strong> ${
+              payment.payment_date
+                ? new Date(payment.payment_date).toLocaleString()
+                : "—"
+            }</p>
           </div>
         `;
 
@@ -78,14 +95,34 @@
       }
     }
 
+    // Show/hide UPI field
+    document.getElementById("payment_method").addEventListener("change", (e) => {
+      const upiSection = document.getElementById("upiSection");
+      if (e.target.value === "online") {
+        upiSection.classList.remove("hidden");
+      } else {
+        upiSection.classList.add("hidden");
+      }
+    });
+
+    // Payment submission
     document.getElementById("payBtn").addEventListener("click", async () => {
       const payment_method = document.getElementById("payment_method").value;
       const remarks = document.getElementById("remarks").value;
+      const upi_id = document.getElementById("upi_id").value;
+
+      if (payment_method === "online" && !upi_id.trim()) {
+        alert("⚠️ Please enter a valid UPI ID before proceeding.");
+        return;
+      }
+
+      const payload = { payment_method, remarks };
+      if (payment_method === "online") payload.upi_id = upi_id;
 
       const res = await fetch(`/api/pay/${user_id}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ payment_method, remarks })
+        body: JSON.stringify(payload)
       });
 
       const data = await res.json();

@@ -81,7 +81,6 @@ app.get('/admin', (req, res) => {
   res.sendFile(join(__dirname, 'public/admin.html'));
 });
 
-
 //saves student details
 app.get("/student/:user_id", (req, res) => {
   const { user_id } = req.params;
@@ -254,7 +253,6 @@ app.get('/admin/hostels/:admin_id', (req, res) => {
   });
 });
 
-
 // Get all students belonging to hostels managed by a specific admin
 app.get("/admin/students", (req, res) => {
   const { admin_id } = req.query;
@@ -271,10 +269,13 @@ app.get("/admin/students", (req, res) => {
       s.guardian_name,
       s.guardian_phone,
       h.hostel_name,
-      s.room_id
+      s.room_id,
+      p.amount AS payment_amount,
+      p.status AS payment_status
     FROM students s
     INNER JOIN hostels h ON s.hostel_id = h.hostel_id
-    WHERE h.admin_id = ?
+    LEFT JOIN fee_payments p ON s.student_id = p.student_id
+    WHERE h.admin_id = ?;
   `;
 
   connection.query(query, [admin_id], (err, rows) => {
@@ -285,6 +286,7 @@ app.get("/admin/students", (req, res) => {
     res.json(rows);
   });
 });
+
 
 
 // Show all rooms + hostels + student booking status
@@ -642,9 +644,6 @@ try {
   }
 });
 
-
-
-
 // Get all rooms (for admin)
 app.get("/admin/rooms", (req, res) => {
   const admin_id = req.query.admin_id; // pass this from frontend later
@@ -811,16 +810,6 @@ app.get("/student/:user_id/admin", (req, res) => {
     res.json(result[0]);
   });
 });
-
-
-
-
-
-
-
-
-
-
 
 
 const PORT = 5000;

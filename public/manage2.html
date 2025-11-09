@@ -11,10 +11,6 @@
   <h1 class="text-4xl font-bold text-blue-600 mb-8">🏠 Admin Hostel Management</h1>
 
   <div id="dataContainer" class="w-11/12 max-w-6xl bg-white shadow-md rounded-xl p-6">
-    <div class="flex justify-between mb-6">
-
-      <button id="addRoomBtn" class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600">+ Add Room</button>
-    </div>
 
     <div id="hostelContainer" class="space-y-8"></div>
   </div>
@@ -47,7 +43,6 @@
           hostelCard.innerHTML = `
             <div class="flex justify-between items-center mb-4">
               <h2 class="text-2xl font-semibold text-gray-800">${hostel.hostel_name}</h2>
-
             </div>
             <div class="ml-4">
               <h3 class="text-lg font-medium mb-2 text-gray-700">Rooms:</h3>
@@ -57,7 +52,6 @@
                     <p><strong>Room:</strong> ${room.room_id}</p>
                     <p><strong>Type:</strong> ${room.room_type}</p>
                     <p><strong>Status:</strong> <span class="${room.status === 'available' ? 'text-green-600' : 'text-red-600'}">${room.status}</span></p>
-
                   </div>
                 `).join("")}
               </div>
@@ -92,10 +86,6 @@
         alert("⚠️ Failed to load data: " + err.message);
       }
     }
-
-    document.getElementById("addRoomBtn").addEventListener("click", () => {
-      window.location.href = "/add_room.html";
-    });
 
     fetchData();
   </script>
